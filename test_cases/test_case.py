@@ -6,7 +6,6 @@ from opendrift.readers import reader_netCDF_CF_generic
 from opendrift.models.oceandrift import OceanDrift
 from opendrift.models.bioplast import BioPlastDrift
 
-@staticmethod
 def sea_water_density(T=10., S=35.):
 	'''The function gives the density of seawater at one atmosphere
 	pressure as given in :
@@ -43,6 +42,9 @@ def sea_water_density(T=10., S=35.):
 	SIG = R1 + (R4*S + R3*np.sqrt(S) + R2)*S
 	Dens0 = SIG + DR350 + 1000.
 	return Dens0
+
+def get_seawater_viscosity(T=10,S=35):
+        return 0.001*(1.7915 - 0.0538*T+ 0.007*(T**(2.0)) - 0.0023*S)
 
 # No horizontal movement, here only investigating vertical mixing and swimming
 r = ConstantReader(
