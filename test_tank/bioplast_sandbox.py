@@ -64,13 +64,13 @@ class BioPlast(DummyClass):
                       'default': 0.0014}),  # 
         ('unfouled_density', {'dtype': np.float32,
                                        'units':'kg/m^3',
-                                       'default': 1028}),  # 
+                                       'default': self.sea_water_density(T=10, S=35)}),  # 
         ('biofilm_no_attached_algae', {'dtype': np.float32,
                                        'units': '',
                                        'default': 0}),
         ('total_density', {'dtype': np.float32,
                      'units': 'kg/m^3',
-                     'default': 1028.}),
+                     'default': self.sea_water_density(T=10, S=35)}),
         ('total_diameter', {'dtype': np.float32,
                       'units': 'm',
                       'default': 0.0014}),
@@ -85,11 +85,11 @@ class BioPlast(DummyClass):
                                 'description': 'Density (rho) of material collected on plastic',
                                 'level': self.CONFIG_LEVEL_ADVANCED},
             'biofilm:grazing_rate':{'type':'float', 'default':0.39,
-                                'min': None, 'max': None, 'units': 'seconds',
+                                'min': None, 'max': None, 'units': 'd-1',
                                 'description': 'Grazing rate on biofilm',
                                 'level': self.CONFIG_LEVEL_ADVANCED},
             'biofilm:respiration_rate':{'type':'float', 'default':0.1,
-                                'min': None, 'max': None, 'units': 'seconds',
+                                'min': None, 'max': None, 'units': 'd-1',
                                 'description': 'Respiration rate of algae on biofilm',
                                 'level': self.CONFIG_LEVEL_ADVANCED},
             'biofilm:temperature_coeff_respiration':{'type':'float', 'default':2,
@@ -100,7 +100,7 @@ class BioPlast(DummyClass):
                                 'min': None, 'max': None, 'units': 'seconds',
                                 'description': 'Va',
                                 'level': self.CONFIG_LEVEL_ADVANCED},
-            'biofilm:algal_cell_radius':{'type':'float', 'default':4.77*10**-17,
+            'biofilm:algal_cell_radius':{'type':'float', 'default':7.78*10**-6,
                                 'min': None, 'max': None, 'units': 'seconds',
                                 'description': 'Ra',
                                 'level': self.CONFIG_LEVEL_ADVANCED},
@@ -108,11 +108,10 @@ class BioPlast(DummyClass):
                                 'min': None, 'max': None, 'units': 'seconds',
                                 'description': 'Used to convert phytoplankton C to no of cells',
                                 'level': self.CONFIG_LEVEL_ADVANCED},
-            'biofilm:shear':{'type':'float', 'default':1.7*10*-5,
+            'biofilm:shear':{'type':'float', 'default':1.7*10**-5,
                                 'min': None, 'max': None, 'units': 'seconds',
                                 'description': 'Shear rate',
                                 'level': self.CONFIG_LEVEL_ADVANCED}})
-        self.set_config('biofilm:algal_cell_radius', 4.77*10**-17)
 
     def get_seawater_viscosity(self):
         return 0.001*(1.7915 - 0.0538*self.environment.sea_water_temperature+ 0.007*(self.environment.sea_water_temperature**(2.0)) - 0.0023*self.environment.sea_water_salinity)
@@ -128,7 +127,7 @@ class BioPlast(DummyClass):
 
         d_brown = 4*np.pi*(self.get_diffusivity(self.elements.total_diameter/2) + self.get_diffusivity(r_a))*((self.elements.total_diameter/2) + r_a)
 
-        d_settle = 0.5*np.pi*((self.elements.total_diameter/2)**2)*self.elements.terminal_velocity
+        d_settle = 0.5*np.pi*((self.elements.total_diameter/2)**2)*-self.elements.terminal_velocity
 
         d_shear = 1.3 * self.get_config('biofilm:shear') * ((self.elements.total_diameter/2) + r_a)**3
 
@@ -149,8 +148,9 @@ class BioPlast(DummyClass):
         respiration = self.get_config('biofilm:temperature_coeff_respiration')**((self.environment.sea_water_temperature - 20)/10) * self.get_config('biofilm:respiration_rate')
 
         # Add up and convert to thickness
+        day_seconds = 60*60*24 # To convert grazing and respiration from daily to per second
         A = self.elements.biofilm_no_attached_algae
-        newAttached = A + (collision_term + growth*A - grazing*A - respiration*A)* self.time_step.total_seconds
+        newAttached = A + (collision_term + growth*A - (grazing/day_seconds)*A - (respiration/day_seconds)*A)* self.time_step.total_seconds
 
         debug_dict = {'d_brown':d_brown, 'd_settle':d_settle, 'd_shear':d_shear, 'growth':np.ones(self.no_elements)*growth,
                         'grazing':np.ones(self.no_elements)*grazing, 'respiration':respiration, 'A':A}
