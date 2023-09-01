@@ -51,8 +51,9 @@ r = ConstantReader(
         {'x_sea_water_velocity': 0.01, 'y_sea_water_velocity': 0.05, 'x_wind': 0, 'y_wind': 0,
          'sea_water_temperature': 10, 'sea_water_salinity': 35,
          'land_binary_mask': 0, 'ocean_vertical_diffusivity': .02,
-		 'mass_concentration_of_phytoplankton_expressed_as_carbon_in_sea_water':0.00001})
-
+		 'mass_concentration_of_phytoplankton_expressed_as_carbon_in_sea_water':0.00001,
+         'mass_concentration_of_phytoplankton_expressed_as_chl_in_sea_water':0.00001,
+		 'surface_net_downward_radiative_flux':0.1})
 o = BioPlastDrift(loglevel=20)  # Set loglevel to 0 for debug information
 o.add_reader(r)
 o.set_config('general:use_auto_landmask', False)
